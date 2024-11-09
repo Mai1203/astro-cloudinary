@@ -1,0 +1,104 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { getCldImageUrl } from "astro-cloudinary/helpers";
+import Heading from "fulldev-ui/components/Heading.astro";
+import Button from "fulldev-ui/components/Button.astro";
+
+const { searchParams } = Astro.url;
+const id = searchParams.get("id");
+
+if (id === null) {
+  return Astro.redirect("/");
+}
+
+// Genera la URL de la imagen original sin modificaciones
+const originalUrl = getCldImageUrl({ src: id });
+---
+
+<Layout title="Edición de filtros">
+  <main>
+    <Heading color="brand" contrast={false}>Edit Your Photo</Heading>
+
+    <div style="margin-top: 20px; margin-bottom: 20px;">
+      <Button class="effect" data-effect="grayscale" color="brand" as="button"
+        >Grayscale</Button
+      >
+      <Button class="effect" data-effect="sepia" color="brand" as="button"
+        >Sepia</Button
+      >
+      <Button class="effect" data-effect="blur" color="brand" as="button"
+        >Blur</Button
+      >
+      <Button class="effect" data-effect="brightness" color="brand" as="button"
+        >Brightness</Button
+      >
+    </div>
+
+    <div style="display: flex; justify-content: center; gap: 20px;">
+      <img
+        id="original"
+        src={originalUrl}
+        alt="Original Photo"
+        style="width: 300px; border-radius: 12px;"
+      />
+      <img
+        id="preview"
+        src={originalUrl}
+        alt="Preview Photo"
+        style="width: 300px; border-radius: 12px;"
+      />
+    </div>
+
+  </main>
+</Layout>
+
+<script>
+  const previewImage = document.getElementById("preview") as HTMLImageElement;  // Obtiene el elemento de la imagen previsualizada
+  const buttons = document.querySelectorAll(".effect");
+
+  // Reemplaza con el nombre de tu cuenta de Cloudinary
+  const CLOUD_NAME = "dnz8iu8wm"; 
+
+  const EFFECTS: Record<string, string> = {  // Define los efectos disponibles
+    grayscale: "e_grayscale",
+    sepia: "e_sepia",
+    blur: "e_blur:200",  // Ajusta el valor de blur si deseas un efecto más suave
+    brightness: "e_brightness:150",  // Ajusta el valor de brillo si deseas cambiar la intensidad
+  } as const;
+
+  // Construye manualmente la URL de Cloudinary con el efecto seleccionado
+  function createCloudinaryUrl(publicId: string, transformation: string): string {
+    const baseUrl = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/`;
+    return `${baseUrl}${transformation}/${publicId}`;
+  }
+
+  buttons.forEach(button => {
+    button.addEventListener("click", () => {
+      const effect = button.getAttribute("data-effect");
+
+      // Verifica si el efecto existe en el objeto EFFECTS
+      if (effect && effect in EFFECTS) {
+        // Obtén el public ID desde la URL original
+        const urlParts = previewImage.src.split('/');
+        const publicIdWithExtension = urlParts[urlParts.length - 1];
+        const publicId = publicIdWithExtension.split('.')[0];  // Remueve la extensión del archivo
+
+        const transformation = EFFECTS[effect];
+        const newUrl = createCloudinaryUrl(publicId, transformation);
+        previewImage.src = newUrl;
+      }
+    });
+  });
+</script>
+
+<style>
+  main {
+    width: 800px;
+    margin: 0 auto;
+    padding-top: 50px;
+    text-align: center;
+  }
+  img {
+    transition: opacity 0.3s ease-in-out;
+  }
+</style>

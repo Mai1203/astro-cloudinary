@@ -1,15 +1,18 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { CldUploadWidget } from 'astro-cloudinary';
+import { CldUploadWidget } from "astro-cloudinary";
 import Heading from "fulldev-ui/components/Heading.astro";
 import Button from "fulldev-ui/components/Button.astro";
+
+let previewUrl = "";
+let publicId = "";
 ---
 
 <Layout title="Welcome to Astro.">
   <main>
     <Heading color="brand" contrast={false}> Welcome to Astro </Heading>
     <CldUploadWidget
-			id="upload-widget"
+      id="upload-widget"
       uploadPreset="demo-halloween"
       options={{
         sources: ["local"],
@@ -18,33 +21,72 @@ import Button from "fulldev-ui/components/Button.astro";
         language: "es",
       }}
     >
-      <Button color="brand" as="button">Upload</Button>
+      <Button color="brand" as="button">Subir Imagen</Button>
     </CldUploadWidget>
+
+    <div id="buttons">
+      <Button id="theme-button" color="brand" as="button">Aplicar Tema</Button>
+      <Button id="filter-button" color="brand" as="button"
+        >Aplicar Filtros</Button
+      >
+    </div>
   </main>
 </Layout>
 
 <script>
-	import { navigate } from 'astro:transitions/client';
+  import { navigate } from "astro:transitions/client";
 
-	const widget = document.getElementById("upload-widget")
+  const widget = document.getElementById("upload-widget");
+  let publicId = "";
 
-	if(widget){
-		widget.addEventListener('clduploadwidget:success', ((e: CustomEvent<{ info: {public_id: string}}>) => {
-			// console.log('clduploadwidget:success', e.detail);
-			const publicId = e.detail.info.public_id;
+  if (widget) {
+    widget.addEventListener("clduploadwidget:success", ((
+      e: CustomEvent<{ info: { public_id: string } }>
+    ) => {
+      console.log("clduploadwidget:success", e.detail);
+      publicId = e.detail.info.public_id;
 
-			navigate(`/photo?id=${publicId}`)
-		}) as EventListener)
-	}
+      //  navigate(`/photo?id=${publicId}`)
+    }) as EventListener);
+  }
 
+  const themeButton = document.getElementById("theme-button");
+  if (themeButton) {
+    themeButton.addEventListener("click", () => {
+      if (publicId) {
+        navigate(`/photo?id=${publicId}`);
+      } else {
+        alert("Por favor primero suba la imagen");
+      }
+    });
+  }
+
+  const filterButton = document.getElementById("filter-button");
+  if (filterButton) {
+    filterButton.addEventListener("click", () => {
+      if (publicId) {
+        navigate(`/edit-photo?id=${publicId}`);
+      } else {
+        alert("Por favor primero suba la imagen");
+      }
+    });
+  }
 </script>
 
 <style>
   main {
+    display: block;
     width: 800px;
     margin: 0 auto;
     padding-top: 100px;
     text-align: center;
+  }
+
+  #buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 10px;
   }
 </style>
 
